@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.properties": "properties",
+        "_types.h": "c",
+        "chrono": "c",
+        "variant": "c",
+        "queue": "c",
+        "random": "c"
+    }
+}
