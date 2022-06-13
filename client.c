@@ -6,21 +6,24 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/02 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/12 18:39:02 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/14 00:52:11 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
+#include <time.h>
 
 static void	received_handler(int sig)
 {
-	static int	received = 0;
+	static int	count = 0;
 
 	if (sig == SIGUSR1)
-		received++;
+	{
+		count++;
+	}
 	else if (sig == SIGUSR2)
 	{
-		ft_printf("INFO: Message sent successfully {sig count: %d}\n", received);
+		ft_printf("\nINFO: Message sent successfully {char count: %d}\n", count);
 		exit(0);
 	}
 }
@@ -49,7 +52,7 @@ static int	send_char_server(unsigned char c, int server_pid)
 
 static int	send_string_server(const char *str, int server_pid)
 {
-	int	i;
+	int		i;
 
 	i = 0;
 	while (str[i])
@@ -78,7 +81,7 @@ int	main(int ac, char **av)
 	server_pid = atoi(av[1]);
 	if (!send_string_server(av[2], server_pid))
 	{
-		ft_printf("ERROR: Signal cannot be sent ");
+		ft_printf("\nERROR: Signal cannot be sent ");
 		ft_printf("to server with pid: %d\n", server_pid);
 		exit(0);
 		return (1);
