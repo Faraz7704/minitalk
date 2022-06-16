@@ -6,7 +6,7 @@
 #    By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/16 11:40:15 by fkhan             #+#    #+#              #
-#    Updated: 2022/06/16 17:46:13 by fkhan            ###   ########.fr        #
+#    Updated: 2022/06/16 18:47:57 by fkhan            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,8 @@ SRCS 			= server.c client.c \
 
 OBJS		 	= $(SRCS:.c=.o)
 
+all: 			$(SERVER) $(CLIENT)
+
 $(SERVER): 		server.o
 				make -C $(PRINTFPATH)
 				$(CC) server.o $(PRINTFPATH)/$(LIBFTPRINTF) -o $(SERVER)
@@ -35,8 +37,6 @@ $(CLIENT): 		client.o
 
 %.o: 			%.c
 				$(CC) $(CFLAGS) -c $< -o $@ -I includes
-
-all: 			$(SERVER) $(CLIENT)
 
 bonus:			all
 
