@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/02 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/14 00:52:11 by fkhan            ###   ########.fr       */
+/*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
+/*   Updated: 2022/06/16 18:25:54 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,13 @@ static void	received_handler(int sig)
 	}
 	else if (sig == SIGUSR2)
 	{
-		ft_printf("\nINFO: Message sent successfully {char count: %d}\n", count);
+		if (!count)
+			ft_printf("ERROR: Server is busy, please try again later.\n");
+		else
+		{
+			ft_printf("INFO: Message sent successfully ");
+			ft_printf("{char count: %d}\n", count);
+		}
 		exit(0);
 	}
 }

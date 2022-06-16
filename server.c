@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/02 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/14 00:59:03 by fkhan            ###   ########.fr       */
+/*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
+/*   Updated: 2022/06/16 18:27:19 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,11 @@ static void	bit_handler(int sig, siginfo_t *info, void *context)
 	(void)context;
 	if (!g_data.client_pid)
 		g_data.client_pid = info->si_pid;
+	else if (info->si_pid != 0 && g_data.client_pid != info->si_pid)
+	{
+		kill(info->si_pid, SIGUSR2);
+		return ;
+	}
 	g_data.index--;
 	g_data.c = g_data.c | (sig == SIGUSR1) << g_data.index;
 	if (g_data.index == 0)
