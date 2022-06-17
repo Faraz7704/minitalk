@@ -6,7 +6,7 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:39:23 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/16 17:47:51 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/17 16:08:03 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,21 @@
 # include "lib/libft/libft.h"
 # include "lib/ft_printf.h"
 
-typedef struct s_event_data
+typedef struct s_server_info
 {
 	int				client_pid;
 	t_list			*buffer;
-	int				index;
+	int				bit_index;
 	unsigned char	c;
-}	t_event_data;
+	unsigned int	last_updated;
+}	t_server_info;
+
+typedef struct s_client_info
+{
+	int				server_pid;
+	char			*str;
+	int				bit_index;
+	unsigned char	c;
+}	t_client_info;
 
 #endif
