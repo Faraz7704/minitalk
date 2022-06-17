@@ -6,7 +6,7 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/17 15:35:44 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/17 16:29:17 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,9 @@ static int	send_bit(t_client_info *info)
 	info->bit_index--;
 	if (info->bit_index < 0)
 	{
-		ft_printf("\n");
 		info->bit_index = 7;
 		info->c = *(++info->str);
 	}
-	ft_printf("%d", info->c >> info->bit_index & 1);
 	if (info->c >> info->bit_index & 1)
 	{
 		if (kill(info->server_pid, SIGUSR1) == -1)
@@ -55,7 +53,6 @@ static void	received_handler(int sig)
 	}
 	else if (sig == SIGUSR2)
 	{
-		ft_printf("\n");
 		if (!count)
 			ft_printf("ERROR: Server is busy, please try again later.\n");
 		else

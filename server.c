@@ -6,7 +6,7 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/17 16:09:30 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/17 16:22:29 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,16 @@ static void	print_buffer(void)
 	curr = g_info.buffer;
 	while (curr)
 	{
-		ft_printf("%c", *(char *)curr->content);
+		ft_putchar_fd(*(char *)curr->content, 1);
 		curr = curr->next;
 	}
-	ft_printf("\n");
+	ft_putchar_fd('\n', 1);
 	if (g_info.buffer)
 		ft_lstclear(&g_info.buffer, del);
+	g_info.c = 0;
+	if (kill(g_info.client_pid, SIGUSR2) == -1)
+		exit(0);
+	g_info.client_pid = 0;
 }
 
 static void	char_received(void)
@@ -39,17 +43,7 @@ static void	char_received(void)
 	char	*new_char;
 
 	if (g_info.c == 0)
-	{
-		if (kill(g_info.client_pid, SIGUSR2) == -1)
-		{
-			if (g_info.buffer)
-				ft_lstclear(&g_info.buffer, del);
-			exit(0);
-		}
 		print_buffer();
-		g_info.client_pid = 0;
-		g_info.c = 0;
-	}
 	else
 	{
 		new_char = ft_strdup((const char *)&g_info.c);
@@ -93,6 +87,7 @@ static void	bit_handler(int sig, siginfo_t *info, void *context)
 		{
 			if (g_info.buffer)
 				ft_lstclear(&g_info.buffer, del);
+			ft_printf("ERROR: Confirmation signal cannot be sent to client\n");
 			exit(0);
 		}
 	}
@@ -108,14 +103,11 @@ int	main(void)
 	g_info.bit_index = 8;
 	bit_action.sa_sigaction = bit_handler;
 	bit_action.sa_flags = SA_SIGINFO;
-	sigemptyset(&bit_action.sa_mask);
-	sigaddset(&bit_action.sa_mask, SIGUSR2);
 	if (sigaction(SIGUSR1, &bit_action, NULL) == -1
 		|| sigaction(SIGUSR2, &bit_action, NULL) == -1)
 	{
 		if (g_info.buffer)
 			ft_lstclear(&g_info.buffer, del);
-		exit(0);
 		ft_printf("ERROR: Signal cannot be established\n");
 		return (1);
 	}
