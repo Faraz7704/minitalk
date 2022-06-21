@@ -6,12 +6,11 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/17 16:29:17 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/21 14:23:20 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-#include <time.h>
 
 t_client_info	g_info;
 
@@ -53,7 +52,7 @@ static void	received_handler(int sig)
 	}
 	else if (sig == SIGUSR2)
 	{
-		if (!count)
+		if (count - 1 != g_info.len)
 			ft_printf("ERROR: Server is busy, please try again later.\n");
 		else
 		{
@@ -76,6 +75,7 @@ int	main(int ac, char **av)
 	signal(SIGUSR2, received_handler);
 	g_info.server_pid = atoi(av[1]);
 	g_info.str = av[2];
+	g_info.len = ft_strlen(av[2]);
 	g_info.bit_index = 8;
 	g_info.c = av[2][0];
 	if (!send_bit(&g_info))

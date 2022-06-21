@@ -1,0 +1,486 @@
+Stack Overflow
+About
+Products
+For Teams
+Search…
+Home
+PUBLIC
+Questions
+Tags
+Users
+Companies
+COLLECTIVES
+Explore Collectives
+TEAMS
+Stack Overflow for Teams – Start collaborating and sharing organizational knowledge. 
+How do I use valgrind to find memory leaks?
+Asked 11 years, 3 months ago
+Modified 4 months ago
+Viewed 545k times
+
+326
+
+
+241
+How do I use valgrind to find the memory leaks in a program?
+
+Please someone help me and describe the steps to carryout the procedure?
+
+I am using Ubuntu 10.04 and I have a program a.c, please help me out.
+
+c
+valgrind
+Share
+Follow
+edited Mar 15, 2011 at 12:53
+user avatar
+Tony
+9,29033 gold badges4646 silver badges7272 bronze badges
+asked Feb 27, 2011 at 18:06
+user avatar
+user484457
+3,85377 gold badges1919 silver badges1414 bronze badges
+22
+You use valgrind to test your compiled program, not the source code. – 
+Tony
+ Mar 15, 2011 at 12:54
+14
+The answer given below by @RageD is correct, why dont you accept it? – 
+Pratik Singhal
+ Feb 13, 2014 at 5:04
+1
+A leak is caused by something you fail to do - ie. free allocated memory. Hence Valgrind cannot show you where the leak is - only you know where the allocated memory is no longer required. However, by telling you which allocation is not being free()d, by tracing the use of that memory through your program, you should be able to determine where it should get free()d. A common mistake is error-exiting a function without freeing allocated memory. – 
+MikeW
+ Jan 13, 2016 at 15:57 
+2
+Related: with any tool: stackoverflow.com/questions/6261201/… – 
+Ciro Santilli Путлер Капут 六四事
+ Sep 10, 2019 at 19:52
+Add a comment
+4 Answers
+Sorted by:
+
+Highest score (default)
+
+655
+
+How to Run Valgrind
+Not to insult the OP, but for those who come to this question and are still new to Linux—you might have to install Valgrind on your system.
+
+sudo apt install valgrind  # Ubuntu, Debian, etc.
+sudo yum install valgrind  # RHEL, CentOS, Fedora, etc.
+sudo pacman -Syu valgrind  # Arch, Manjaro, Garuda, etc
+Valgrind is readily usable for C/C++ code, but can even be used for other languages when configured properly (see this for Python).
+
+To run Valgrind, pass the executable as an argument (along with any parameters to the program).
+
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         --verbose \
+         --log-file=valgrind-out.txt \
+         ./executable exampleParam1
+The flags are, in short:
+
+--leak-check=full: each individual leak will be shown in detail
+--show-leak-kinds=all: Show all of definite, indirect, possible, reachable leak kinds in the full report.
+--track-origins=yes: Favor useful output over speed. This tracks the origins of uninitialized values, which could be very useful for memory errors. Consider turning off if Valgrind is unacceptably slow.
+--verbose: Can tell you about unusual behavior of your program. Repeat for more verbosity.
+--log-file: Write to a file. Useful when output exceeds terminal space.
+Finally, you would like to see a Valgrind report that looks like this:
+
+HEAP SUMMARY:
+    in use at exit: 0 bytes in 0 blocks
+  total heap usage: 636 allocs, 636 frees, 25,393 bytes allocated
+ 
+All heap blocks were freed -- no leaks are possible
+ 
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+I have a leak, but WHERE?
+So, you have a memory leak, and Valgrind isnt saying anything meaningful. Perhaps, something like this:
+
+5 bytes in 1 blocks are definitely lost in loss record 1 of 1
+   at 0x4C29BE3: malloc (vg_replace_malloc.c:299)
+   by 0x40053E: main (in /home/Peri461/Documents/executable)
+Lets take a look at the C code I wrote too:
+
+#include <stdlib.h>
+
+int main() {
+    char* string = malloc(5 * sizeof(char)); //LEAK: not freed!
+    return 0;
+}
+Well, there were 5 bytes lost. How did it happen? The error report just says main and malloc. In a larger program, that would be seriously troublesome to hunt down. This is because of how the executable was compiled. We can actually get line-by-line details on what went wrong. Recompile your program with a debug flag (Im using gcc here):
+
+gcc -o executable -std=c11 -Wall main.c         # suppose it was this at first
+gcc -o executable -std=c11 -Wall -ggdb3 main.c  # add -ggdb3 to it
+Now with this debug build, Valgrind points to the exact line of code allocating the memory that got leaked! (The wording is important: it might not be exactly where your leak is, but what got leaked. The trace helps you find where.)
+
+5 bytes in 1 blocks are definitely lost in loss record 1 of 1
+   at 0x4C29BE3: malloc (vg_replace_malloc.c:299)
+   by 0x40053E: main (main.c:4)
+Techniques for Debugging Memory Leaks & Errors
+Make use of www.cplusplus.com! It has great documentation on C/C++ functions.
+
+General advice for memory leaks:
+
+Make sure your dynamically allocated memory does in fact get freed.
+
+Dont allocate memory and forget to assign the pointer.
+
+Dont overwrite a pointer with a new one unless the old memory is freed.
+
+General advice for memory errors:
+
+Access and write to addresses and indices youre sure belong to you. Memory errors are different from leaks; theyre often just IndexOutOfBoundsException type problems.
+
+Dont access or write to memory after freeing it.
+
+Sometimes your leaks/errors can be linked to one another, much like an IDE discovering that you havent typed a closing bracket yet. Resolving one issue can resolve others, so look for one that looks a good culprit and apply some of these ideas:
+
+List out the functions in your code that depend on/are dependent on the offending code that has the memory error. Follow the programs execution (maybe even in gdb perhaps), and look for precondition/postcondition errors. The idea is to trace your programs execution while focusing on the lifetime of allocated memory.
+
+Try commenting out the offending block of code (within reason, so your code still compiles). If the Valgrind error goes away, youve found where it is.
+
+If all else fails, try looking it up. Valgrind has documentation too!
+
+A Look at Common Leaks and Errors
+Watch your pointers
+60 bytes in 1 blocks are definitely lost in loss record 1 of 1
+   at 0x4C2BB78: realloc (vg_replace_malloc.c:785)
+   by 0x4005E4: resizeArray (main.c:12)
+   by 0x40062E: main (main.c:19)
+And the code:
+
+#include <stdlib.h>
+#include <stdint.h>
+
+struct _List {
+    int32_t* data;
+    int32_t length;
+};
+typedef struct _List List;
+
+List* resizeArray(List* array) {
+    int32_t* dPtr = array->data;
+    dPtr = realloc(dPtr, 15 * sizeof(int32_t)); //doesnt update array->data
+    return array;
+}
+
+int main() {
+    List* array = calloc(1, sizeof(List));
+    array->data = calloc(10, sizeof(int32_t));
+    array = resizeArray(array);
+
+    free(array->data);
+    free(array);
+    return 0;
+}
+As a teaching assistant, Ive seen this mistake often. The student makes use of a local variable and forgets to update the original pointer. The error here is noticing that realloc can actually move the allocated memory somewhere else and change the pointers location. We then leave resizeArray without telling array->data where the array was moved to.
+
+Invalid write
+1 errors in context 1 of 1:
+Invalid write of size 1
+   at 0x4005CA: main (main.c:10)
+ Address 0x51f905a is 0 bytes after a block of size 26 allocd
+   at 0x4C2B975: calloc (vg_replace_malloc.c:711)
+   by 0x400593: main (main.c:5)
+And the code:
+
+#include <stdlib.h>
+#include <stdint.h>
+
+int main() {
+    char* alphabet = calloc(26, sizeof(char));
+
+    for(uint8_t i = 0; i < 26; i++) {
+        *(alphabet + i) = A + i;
+    }
+    *(alphabet + 26) = \0; //null-terminate the string?
+
+    free(alphabet);
+    return 0;
+}
+Notice that Valgrind points us to the commented line of code above. The array of size 26 is indexed [0,25] which is why *(alphabet + 26) is an invalid write—its out of bounds. An invalid write is a common result of off-by-one errors. Look at the left side of your assignment operation.
+
+Invalid read
+1 errors in context 1 of 1:
+Invalid read of size 1
+   at 0x400602: main (main.c:9)
+ Address 0x51f90ba is 0 bytes after a block of size 26 allocd
+   at 0x4C29BE3: malloc (vg_replace_malloc.c:299)
+   by 0x4005E1: main (main.c:6)
+And the code:
+
+#include <stdlib.h>
+#include <stdint.h>
+
+int main() {
+    char* destination = calloc(27, sizeof(char));
+    char* source = malloc(26 * sizeof(char));
+
+    for(uint8_t i = 0; i < 27; i++) {
+        *(destination + i) = *(source + i); //Look at the last iteration.
+    }
+
+    free(destination);
+    free(source);
+    return 0;
+}
+Valgrind points us to the commented line above. Look at the last iteration here, which is
+*(destination + 26) = *(source + 26);. However, *(source + 26) is out of bounds again, similarly to the invalid write. Invalid reads are also a common result of off-by-one errors. Look at the right side of your assignment operation.
+
+The Open Source (U/Dys)topia
+How do I know when the leak is mine? How do I find my leak when Im using someone elses code? I found a leak that isnt mine; should I do something? All are legitimate questions. First, 2 real-world examples that show 2 classes of common encounters.
+
+Jansson: a JSON library
+#include <jansson.h>
+#include <stdio.h>
+
+int main() {
+    char* string = { \key\: \value\ };
+
+    json_error_t error;
+    json_t* root = json_loads(string, 0, &error); //obtaining a pointer
+    json_t* value = json_object_get(root, key); //obtaining a pointer
+    printf(\%s\ is the value field.\n, json_string_value(value)); //use value
+
+    json_decref(value); //Do I free this pointer?
+    json_decref(root);  //What about this one? Does the order matter?
+    return 0;
+}
+This is a simple program: it reads a JSON string and parses it. In the making, we use library calls to do the parsing for us. Jansson makes the necessary allocations dynamically since JSON can contain nested structures of itself. However, this doesnt mean we decref or free the memory given to us from every function. In fact, this code I wrote above throws both an Invalid read and an Invalid write. Those errors go away when you take out the decref line for value.
+
+Why? The variable value is considered a borrowed reference in the Jansson API. Jansson keeps track of its memory for you, and you simply have to decref JSON structures independent of each other. The lesson here: read the documentation. Really. Its sometimes hard to understand, but theyre telling you why these things happen. Instead, we have existing questions about this memory error.
+
+SDL: a graphics and gaming library
+#include SDL2/SDL.h
+
+int main(int argc, char* argv[]) {
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) != 0) {
+        SDL_Log(Unable to initialize SDL: %s, SDL_GetError());
+        return 1;
+    }
+
+    SDL_Quit();
+    return 0;
+}
+Whats wrong with this code? It consistently leaks ~212 KiB of memory for me. Take a moment to think about it. We turn SDL on and then off. Answer? There is nothing wrong.
+
+That might sound bizarre at first. Truth be told, graphics are messy and sometimes you have to accept some leaks as being part of the standard library. The lesson here: you need not quell every memory leak. Sometimes you just need to suppress the leaks because theyre known issues you cant do anything about. (This is not my permission to ignore your own leaks!)
+
+Answers unto the void
+How do I know when the leak is mine?
+It is. (99% sure, anyway)
+
+How do I find my leak when Im using someone elses code?
+Chances are someone else already found it. Try Google! If that fails, use the skills I gave you above. If that fails and you mostly see API calls and little of your own stack trace, see the next question.
+
+I found a leak that isnt mine; should I do something?
+Yes! Most APIs have ways to report bugs and issues. Use them! Help give back to the tools youre using in your project!
+
+Further Reading
+Thanks for staying with me this long. I hope youve learned something, as I tried to tend to the broad spectrum of people arriving at this answer. Some things I hope youve asked along the way: How does Cs memory allocator work? What actually is a memory leak and a memory error? How are they different from segfaults? How does Valgrind work? If you had any of these, please do feed your curiousity:
+
+More about malloc, Cs memory allocator
+Definition of a segmentation fault
+Definition of a memory leak
+Definition of a memory access error
+How does Valgrind work?
+Share
+Follow
+edited Feb 18 at 22:18
+community wiki
+7 revs, 3 users 98%
+user7851115
+13
+Far better answer, a shame this isnt the accepted answer. – 
+A. Smoliak
+ Mar 25, 2018 at 10:56
+I believe it to be a good practice to do such a thing, I did a few myself – 
+A. Smoliak
+ Mar 27, 2018 at 6:39
+4
+Can I star this answer and use it as future reference for myself? Good work! – 
+Zap
+ Oct 21, 2018 at 21:25
+does memcheck tool is enabled by default? – 
+abhiarora
+ Apr 3, 2020 at 17:23
+@abhiarora Yes. The man page tells us that memcheck is the default tool: --tool=<toolname> [default: memcheck] – 
+user7851115
+ May 7, 2020 at 17:46
+Show 9 more comments
+
+165
+
+Try this:
+
+valgrind --leak-check=full -v ./your_program
+
+As long as valgrind is installed it will go through your program and tell you whats wrong. It can give you pointers and approximate places where your leaks may be found. If youre segfaulting, try running it through gdb.
+
+Share
+Follow
+edited Dec 16, 2016 at 22:23
+user avatar
+Jezen Thomas
+13.3k66 gold badges5252 silver badges9090 bronze badges
+answered Feb 27, 2011 at 18:11
+user avatar
+RageD
+6,51344 gold badges2828 silver badges3737 bronze badges
+What does your_program mean ? Is this source code location or application name such as apk file ? – 
+Bulma
+ Jun 29, 2016 at 7:16 
+12
+your_program == the executable name or whatever command you use to run your application. – 
+RageD
+ Jun 30, 2016 at 15:47
+Add a comment
+
+34
+
+You can run:
+
+valgrind --leak-check=full --log-file=logfile.out -v [your_program(and its arguments)]
+Share
+Follow
+edited Oct 6, 2014 at 13:13
+user avatar
+nettux
+4,96222 gold badges2121 silver badges3232 bronze badges
+answered Oct 6, 2014 at 12:16
+user avatar
+Rajat Paliwal
+60477 silver badges1111 bronze badges
+Add a comment
+
+13
+
+You can create an alias in .bashrc file as follows
+
+alias vg=valgrind --leak-check=full -v --track-origins=yes --log-file=vg_logfile.out
+So whenever you want to check memory leaks, just do simply
+
+vg ./<name of your executable> <command line parameters to your executable>
+This will generate a Valgrind log file in the current directory.
+
+Share
+Follow
+answered May 21, 2020 at 6:50
+user avatar
+Sachin Rastogi
+35133 silver badges88 bronze badges
+Add a comment
+Highly active question. Earn 10 reputation (not counting the association bonus) in order to answer this question. The reputation requirement helps protect this question from spam and non-answer activity.
+Not the answer youre looking for? Browse other questions tagged c valgrind or ask your own question.
+The Overflow Blog
+Privacy is a moving target. Here’s how engineering teams can stay on track...
+Our favorite features and updates from WWDC (Ep. 454)
+Featured on Meta
+Announcing the arrival of Valued Associate #1214: Dalmarus
+Testing new traffic management tool
+Ask Wizard Test Results and Next Steps
+Linked
+218
+How to find memory leak in a C++ code/project?
+86
+How does valgrind work?
+64
+How to use valgrind with python?
+32
+Why does valgrind say basic SDL program is leaking memory?
+0
+Working of malloc in C
+3
+Error with Double Linked List, I cant find the missing attribute before *
+2
+C Allocating array of 500 and more longs
+0
+Does this C code leak memory?
+1
+strcpy() in c gives me segmentation fault
+0
+Function will only properly work if Ive printed the values of the attributes
+See more linked questions
+Related
+2969
+How do you set, clear, and toggle a single bit?
+614
+What REALLY happens when you dont free after malloc before program termination?
+3217
+Improve INSERT-per-second performance of SQLite
+174
+Still Reachable Leak detected by Valgrind
+2263
+What does the ??!??! operator do in C?
+9
+Suppression files for Qt memory leaks with Valgrind
+0
+Valgrind detecting leaks from GNUstep (Objective-C) on Ubuntu
+0
+c++ Allegro 5 - memory leaks (valgrind)
+1
+Valgrind Memory Leaks, Invalid free()
+Hot Network Questions
+Why hasnt Israel imposed sanctions on Russia?
+Statistical interpretation of diagonal of Cholesky decomposition?
+How does IRS know that I calculated tax using worksheet Qualified Dividends and Capital Gain Tax Worksheet
+An amusing integral evaluation
+Truncate words in a sentence
+How can you drive back without refueling?
+Could a hand launched missile work?
+Two different papers with different subjects but same experimental data. How should we behave?
+Why pursue a PhD in pure Mathematics?
+When did the Joyal model structure on simplicial sets originate?
+How to have different number of columns per row in table?
+ssh-keygen fingerprint format is different between RSA+ECDSA and ED25519
+PolarPlot with function output represented with color rather than distance from origin
+Gray coded Gray code convertor
+170k debut fantasy story. Is it possible?
+Where does Firefox (Snap) store the profiles?
+My 5 year old successfully built a Lego set Porsche made for 18+ completely by himself, What can I do to use his gift in some way? What does this mean
+Extend a matrix in all directions
+What would still discourage my people from settling on this subcontinent?
+Why do we talk about inertia tensor?
+Is it in the European Unions interest to allow Ukraine to join?
+NonlinearModelFit for nonlinear functions
+90s horror cartoon with a demonic lord and an army of different horror creatures
+What does 「たけた」mean in this sentence? 「他人に依存することばかりに たけた寄生虫」
+ Question feed
+
+STACK OVERFLOW
+Questions
+Help
+PRODUCTS
+Teams
+Advertising
+Collectives
+Talent
+COMPANY
+About
+Press
+Work Here
+Legal
+Privacy Policy
+Terms of Service
+Contact Us
+Cookie Settings
+Cookie Policy
+STACK EXCHANGE NETWORK
+Technology
+Culture & recreation
+Life & arts
+Science
+Professional
+Business
+API
+Data
+Blog
+Facebook
+Twitter
+LinkedIn
+Instagram
+Site design / logo © 2022 Stack Exchange Inc; user contributions licensed under cc by-sa. rev 2022.6.20.42399

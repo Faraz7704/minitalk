@@ -6,15 +6,15 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/07 12:17:08 by fkhan             #+#    #+#             */
-/*   Updated: 2022/02/16 18:47:49 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/19 14:40:01 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FT_PRINTF_H
 # define FT_PRINTF_H
 
-# include "libft/libft.h"
-# include "stdarg.h"
+# include "libft.h"
+# include <stdarg.h>
 
 struct s_data
 {
@@ -38,7 +38,7 @@ int				pf_putlhex_fd(unsigned int n, int f, int u, struct s_data d);
 int				pf_putlptr_fd(unsigned long long p, int f, struct s_data d);
 int				pf_width(int n, int is_zero, int fd);
 int				ft_digitlen(int long long nbr);
-void			ft_puthex(uintptr_t num, int fd, int isupper);
-int				ft_hexlen(uintptr_t num);
+void			ft_puthex(unsigned long long num, int fd, int isupper);
+int				ft_hexlen(unsigned long long num);
 
 #endif

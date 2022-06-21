@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_memmove.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: faraz <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
+/*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/06 00:04:17 by faraz             #+#    #+#             */
-/*   Updated: 2022/01/06 21:29:00 by faraz            ###   ########.fr       */
+/*   Updated: 2022/04/26 14:50:33 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ void	*ft_memmove(void *dest, const void *src, size_t n)
 	if ((size_t)dest - (size_t)src < n)
 	{
 		i = n - 1;
-		while (i >= 0 && i < n)
+		while (n > 0 && i < n)
 		{
 			((unsigned char *)dest)[i] = ((unsigned char *)src)[i];
 			i--;

@@ -6,7 +6,7 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/07 11:30:01 by fkhan             #+#    #+#             */
-/*   Updated: 2022/02/17 17:05:06 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/04/26 13:26:26 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,13 +60,3 @@ int	ft_printf(const char *str, ...)
 	va_end(ap);
 	return (len);
 }
-
-// int main(void)
-// {
-//     int ft_res = ft_printf("%%%");
-//     printf("\n");
-//     int res = printf("%%%");
-//     printf("\n");
-//     printf("ft_res: %d\nres: %d\n", ft_res, res);
-//     return (0);
-// }

@@ -6,13 +6,13 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 19:03:20 by fkhan             #+#    #+#             */
-/*   Updated: 2022/02/15 23:03:29 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/04/25 16:21:25 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-void	ft_puthex(uintptr_t num, int fd, int isupper)
+void	ft_puthex(unsigned long long num, int fd, int isupper)
 {
 	if (num >= 16)
 	{

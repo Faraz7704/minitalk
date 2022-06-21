@@ -6,7 +6,7 @@
 /*   By: fkhan <fkhan@student.42abudhabi.ae>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:39:47 by fkhan             #+#    #+#             */
-/*   Updated: 2022/06/17 16:22:29 by fkhan            ###   ########.fr       */
+/*   Updated: 2022/06/21 14:21:59 by fkhan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ static void	char_received(void)
 {
 	char	*new_char;
 
+	g_info.bit_index = 8;
 	if (g_info.c == 0)
 		print_buffer();
 	else
@@ -67,29 +68,27 @@ static void	char_received(void)
 static void	bit_handler(int sig, siginfo_t *info, void *context)
 {
 	(void)context;
-	if (!g_info.client_pid)
-		g_info.client_pid = info->si_pid;
-	else if (info->si_pid != 0 && g_info.client_pid != info->si_pid)
+	if (info->si_pid != 0 && g_info.client_pid != info->si_pid)
 	{
-		kill(info->si_pid, SIGUSR2);
-		return ;
+		if (g_info.client_pid != 0)
+			kill(g_info.client_pid, SIGUSR2);
+		if (g_info.buffer)
+			ft_lstclear(&g_info.buffer, del);
+		g_info.bit_index = 8;
+		g_info.c = 0;
 	}
+	if (info->si_pid != 0)
+		g_info.client_pid = info->si_pid;
 	g_info.bit_index--;
 	g_info.c = g_info.c | (sig == SIGUSR1) << g_info.bit_index;
 	if (g_info.bit_index == 0)
-	{
-		g_info.bit_index = 8;
 		char_received();
-	}
-	else
+	else if (kill(g_info.client_pid, SIGUSR1) == -1)
 	{
-		if (kill(g_info.client_pid, SIGUSR1) == -1)
-		{
-			if (g_info.buffer)
-				ft_lstclear(&g_info.buffer, del);
-			ft_printf("ERROR: Confirmation signal cannot be sent to client\n");
-			exit(0);
-		}
+		if (g_info.buffer)
+			ft_lstclear(&g_info.buffer, del);
+		ft_printf("ERROR: Confirmation signal cannot be sent to client\n");
+		exit(0);
 	}
 }
 
@@ -100,7 +99,7 @@ int	main(void)
 
 	pid = getpid();
 	ft_printf("PID: %d\n", pid);
-	g_info.bit_index = 8;
+	bit_action = (struct sigaction){0};
 	bit_action.sa_sigaction = bit_handler;
 	bit_action.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGUSR1, &bit_action, NULL) == -1
